@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:finstagram/style.dart' as style;
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter/rendering.dart';
 
 void main() {
   runApp(
@@ -20,7 +23,26 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   var tab = 0;
-  var posts = 3;
+  var dataURL = '';
+  var data = [];
+
+  getData(url) async {
+    var result = await http.get(Uri.parse(url));
+
+    if (result.statusCode == 200) {
+      setState(() {
+        data = jsonDecode(result.body);
+      });
+    } else {
+      return Text('Data could not be retrieved');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getData(dataURL);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,20 +54,23 @@ class _MyAppState extends State<MyApp> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return Upload();
+                  },
+                ),
+              );
+            },
             icon: Icon(Icons.add_box_outlined),
             iconSize: 30,
           ),
           Padding(padding: EdgeInsetsDirectional.only(end: 10))
         ],
       ),
-      // body: [Text('Home'), Text('Shop')][tab],
-      body: ListView.builder(
-        itemCount: posts,
-        itemBuilder: (context, index) {
-          return PostItem(index: index);
-        },
-      ),
+      body: [Home(data: data), Text('Shopping Page')][tab],
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(
@@ -67,39 +92,94 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-class PostItem extends StatelessWidget {
-  PostItem({Key? key, this.index}) : super(key: key);
-
-  var index;
+class Upload extends StatelessWidget {
+  const Upload({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(8.0),
-      child: Column(
+    return Scaffold(
+      appBar: AppBar(
+        leading: Builder(
+          builder: (context) {
+            return IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: Icon(
+                  Icons.chevron_left,
+                  color: Colors.black,
+                ));
+          },
+        ),
+      ),
+      body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: double.infinity,
-            height: 500,
-            child: Image.asset(
-              'assets/images/pic${index + 1}.png',
-              fit: BoxFit.fill,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Likes'),
-                Text('Author'),
-                Text('Content'),
-              ],
-            ),
-          ),
+          Text('Image Upload Screen'),
         ],
       ),
     );
+  }
+}
+
+class Home extends StatefulWidget {
+  Home({Key? key, this.data}) : super(key: key);
+
+  var data;
+
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  var posts = 3;
+  var scroll = ScrollController();
+  var dataURL = '';
+
+  getMore(dataURL) async {
+    var result = await http.get(Uri.parse(dataURL));
+    setState(() {
+      widget.data = [...widget.data, jsonDecode(result.body)];
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    scroll.addListener(() {
+      if (scroll.position.pixels == scroll.position.maxScrollExtent) {
+        getMore(dataURL);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.data.isNotEmpty) {
+      return ListView.builder(
+        controller: scroll,
+        itemCount: widget.data.length,
+        itemBuilder: (context, index) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                height: 30,
+              ),
+              // Image.asset('assets/images/pic${data.length - index}.png'),
+              Image.network(widget.data[index]['image']),
+              Text('Likes: ${widget.data[index]['likes']}'),
+              Text('Author: ${widget.data[index]['user']}'),
+              Text(widget.data[index]['content']),
+            ],
+          );
+        },
+      );
+    } else {
+      return Center(
+        child: Text('Loading'),
+      );
+    }
   }
 }
