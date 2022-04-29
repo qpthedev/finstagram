@@ -4,6 +4,8 @@ import 'package:finstagram/style.dart' as style;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/rendering.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 void main() {
   runApp(
@@ -25,6 +27,27 @@ class _MyAppState extends State<MyApp> {
   var tab = 0;
   var dataURL = '';
   var data = [];
+  var userImage;
+  var userContent;
+
+  addMyData() {
+    var myData = {
+      'id': data.length,
+      'image': userImage,
+      'likes': 5,
+      'date': 'July 25',
+      'content': userContent,
+      'liked': false,
+      'user': 'John Kim',
+    };
+    setState(() {
+      data.insert(0, myData);
+    });
+  }
+
+  setUserContent(content) {
+    userContent = content;
+  }
 
   getData(url) async {
     var result = await http.get(Uri.parse(url));
@@ -54,12 +77,26 @@ class _MyAppState extends State<MyApp> {
         ),
         actions: [
           IconButton(
-            onPressed: () {
+            onPressed: () async {
+              var picker = ImagePicker();
+              var image = await picker.pickImage(source: ImageSource.gallery);
+              if (image != null) {
+                setState(() {
+                  userImage = File(image.path);
+                });
+              } else {
+                return;
+              }
+
               Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) {
-                    return Upload();
+                    return Upload(
+                      userImage: userImage,
+                      setUserContent: setUserContent,
+                      addMyData: addMyData,
+                    );
                   },
                 ),
               );
@@ -93,29 +130,50 @@ class _MyAppState extends State<MyApp> {
 }
 
 class Upload extends StatelessWidget {
-  const Upload({Key? key}) : super(key: key);
+  const Upload({Key? key, this.userImage, this.setUserContent, this.addMyData})
+      : super(key: key);
+
+  final userImage;
+  final setUserContent;
+  final addMyData;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         leading: Builder(
           builder: (context) {
             return IconButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                icon: Icon(
-                  Icons.chevron_left,
-                  color: Colors.black,
-                ));
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              icon: Icon(
+                Icons.chevron_left,
+                color: Colors.black,
+              ),
+            );
           },
         ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              addMyData();
+              Navigator.pop(context);
+            },
+            icon: Icon(Icons.send),
+          )
+        ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: ListView(
         children: [
+          Image.file(userImage),
           Text('Image Upload Screen'),
+          TextField(
+            onChanged: (value) {
+              setUserContent(value);
+            },
+          )
         ],
       ),
     );
@@ -168,7 +226,10 @@ class _HomeState extends State<Home> {
                 height: 30,
               ),
               // Image.asset('assets/images/pic${data.length - index}.png'),
-              Image.network(widget.data[index]['image']),
+              widget.data[index]['image'].runtimeType == String
+                  ? Image.network(widget.data[index]['image'])
+                  : Image.file(widget.data[index]['image']),
+
               Text('Likes: ${widget.data[index]['likes']}'),
               Text('Author: ${widget.data[index]['user']}'),
               Text(widget.data[index]['content']),
