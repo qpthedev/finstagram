@@ -272,6 +272,8 @@ class Store extends ChangeNotifier {
   var name = 'qpthedev';
   var followers = 0;
   var following = false;
+  var profileurl = '';
+  var data = [];
 
   changeFollowing() {
     if (following == false) {
@@ -284,12 +286,31 @@ class Store extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  getData() async {
+    var result = await http.get(Uri.parse(profileurl));
+    data = jsonDecode(result.body);
+    notifyListeners();
+  }
 }
 
-class Profile extends StatelessWidget {
+class Profile extends StatefulWidget {
   const Profile({
     Key? key,
   }) : super(key: key);
+
+  @override
+  State<Profile> createState() => _ProfileState();
+}
+
+class _ProfileState extends State<Profile> {
+  var data = [];
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<Store>().getData();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -297,31 +318,61 @@ class Profile extends StatelessWidget {
       appBar: AppBar(
         title: Text(context.watch<Store>().name),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.grey,
-                shape: BoxShape.circle,
-              ),
-              // margin: EdgeInsets.all(20),
-            ),
-            Text('Follower: ${context.watch<Store>().followers}'),
-            ElevatedButton(
-              onPressed: () {
-                context.read<Store>().changeFollowing();
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: ProfileHeader(),
+          ),
+          SliverGrid(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.all(1.0),
+                  child: Image.network(context.watch<Store>().data[index]),
+                );
               },
-              child: Text(context.watch<Store>().following == true
-                  ? 'Unfollow'
-                  : 'Follow'),
+              childCount: context.watch<Store>().data.length,
             ),
-          ],
-        ),
+            gridDelegate:
+                SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class ProfileHeader extends StatelessWidget {
+  const ProfileHeader({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: Colors.grey,
+              shape: BoxShape.circle,
+            ),
+            // margin: EdgeInsets.all(20),
+          ),
+          Text('Follower: ${context.watch<Store>().followers}'),
+          ElevatedButton(
+            onPressed: () {
+              context.read<Store>().changeFollowing();
+            },
+            child: Text(context.watch<Store>().following == true
+                ? 'Unfollow'
+                : 'Follow'),
+          ),
+        ],
       ),
     );
   }
