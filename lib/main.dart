@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(
@@ -29,6 +30,11 @@ class _MyAppState extends State<MyApp> {
   var data = [];
   var userImage;
   var userContent;
+
+  saveData() async {
+    var storage = await SharedPreferences.getInstance();
+    storage.setString('name', 'John');
+  }
 
   addMyData() {
     var myData = {
