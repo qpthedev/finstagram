@@ -236,6 +236,19 @@ class _HomeState extends State<Home> {
                   ? Image.network(widget.data[index]['image'])
                   : Image.file(widget.data[index]['image']),
 
+              GestureDetector(
+                child: Text(widget.data[index]['user']),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, a1, a2) => Profile(),
+                      transitionsBuilder: (context, a1, a2, child) =>
+                          FadeTransition(opacity: a1, child: child),
+                    ),
+                  );
+                },
+              ),
               Text('Likes: ${widget.data[index]['likes']}'),
               Text('Author: ${widget.data[index]['user']}'),
               Text(widget.data[index]['content']),
@@ -248,5 +261,19 @@ class _HomeState extends State<Home> {
         child: Text('Loading'),
       );
     }
+  }
+}
+
+class Profile extends StatelessWidget {
+  const Profile({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: Text('Profile Page'),
+    );
   }
 }
