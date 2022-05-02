@@ -5,14 +5,18 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(
-    MaterialApp(
-      theme: style.theme,
-      home: MyApp(),
+    ChangeNotifierProvider(
+      create: (context) => Store(),
+      child: MaterialApp(
+        theme: style.theme,
+        home: MyApp(),
+      ),
     ),
   );
 }
@@ -264,6 +268,24 @@ class _HomeState extends State<Home> {
   }
 }
 
+class Store extends ChangeNotifier {
+  var name = 'qpthedev';
+  var followers = 0;
+  var following = false;
+
+  changeFollowing() {
+    if (following == false) {
+      followers += 1;
+      following = true;
+      notifyListeners();
+    } else if (following == true) {
+      followers -= 1;
+      following = false;
+      notifyListeners();
+    }
+  }
+}
+
 class Profile extends StatelessWidget {
   const Profile({
     Key? key,
@@ -272,8 +294,35 @@ class Profile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      body: Text('Profile Page'),
+      appBar: AppBar(
+        title: Text(context.watch<Store>().name),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.grey,
+                shape: BoxShape.circle,
+              ),
+              // margin: EdgeInsets.all(20),
+            ),
+            Text('Follower: ${context.watch<Store>().followers}'),
+            ElevatedButton(
+              onPressed: () {
+                context.read<Store>().changeFollowing();
+              },
+              child: Text(context.watch<Store>().following == true
+                  ? 'Unfollow'
+                  : 'Follow'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
