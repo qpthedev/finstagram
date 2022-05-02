@@ -1,3 +1,4 @@
+import 'package:finstagram/notification.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:finstagram/style.dart' as style;
@@ -74,12 +75,19 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    initNotification();
     getData(dataURL);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        child: Text('+'),
+        onPressed: () {
+          showNotification2();
+        },
+      ),
       appBar: AppBar(
         title: Text(
           'Finstagram',
