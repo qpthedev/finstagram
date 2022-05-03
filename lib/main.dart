@@ -1,3 +1,5 @@
+import 'package:finstagram/shop.dart';
+import 'package:finstagram/urls.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:finstagram/style.dart' as style;
@@ -38,7 +40,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   var tab = 0;
-  var dataURL = '';
+
   var data = [];
   var userImage;
   var userContent;
@@ -132,7 +134,7 @@ class _MyAppState extends State<MyApp> {
           Padding(padding: EdgeInsetsDirectional.only(end: 10))
         ],
       ),
-      body: [Home(data: data), Text('Shopping Page')][tab],
+      body: [Home(data: data), Shop()][tab],
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(
@@ -217,7 +219,6 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   var posts = 3;
   var scroll = ScrollController();
-  var dataURL = '';
 
   getMore(dataURL) async {
     var result = await http.get(Uri.parse(dataURL));
@@ -231,7 +232,7 @@ class _HomeState extends State<Home> {
     super.initState();
     scroll.addListener(() {
       if (scroll.position.pixels == scroll.position.maxScrollExtent) {
-        getMore(dataURL);
+        getMore(moreURL);
       }
     });
   }
@@ -287,7 +288,7 @@ class Store extends ChangeNotifier {
   var name = 'qpthedev';
   var followers = 0;
   var following = false;
-  var profileurl = '';
+
   var data = [];
 
   changeFollowing() {
@@ -303,7 +304,7 @@ class Store extends ChangeNotifier {
   }
 
   getData() async {
-    var result = await http.get(Uri.parse(profileurl));
+    var result = await http.get(Uri.parse(profileURL));
     data = jsonDecode(result.body);
     notifyListeners();
   }

@@ -48,3 +48,4 @@ app.*.map.json
 
 # Etc.
 assets/*
+lib/urls.dart
